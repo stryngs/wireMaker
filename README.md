@@ -14,7 +14,6 @@ Uses the same layout on the server side as the single client setup with the addi
 ```
 ## Server setup:
     wg-quick up ./svrWire.conf
-    ifconfig svrWire 10.249.177.1 up
 
 ## Client setup:
     wg-quick up ./cliWire.conf
@@ -24,4 +23,12 @@ Uses the same layout on the server side as the single client setup with the addi
 
 ## Client teardown:
     wg-quick down ./cliWire.conf
+```
+
+## Run as a service
+Create or modify /etc/wireguard/wg0.conf using the generated .conf file
+```
+systemctl enable wg-quick@wg0
+systemctl daemon-reload
+systemctl start wg-quick@wg0
 ```
