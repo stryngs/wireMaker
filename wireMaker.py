@@ -42,6 +42,7 @@ def main(endIp, endPt, multiClient = False):
         svrQck = f"""[Interface]
 PrivateKey = {svrPriv}
 ListenPort = {endPt}
+Address = 10.249.177.1
 
 [Peer]
 PublicKey = {cliQck[1]}
@@ -73,6 +74,7 @@ PresharedKey = {p[2]}
         svrQck = f"""[Interface]
 PrivateKey = {svrPriv}
 ListenPort = {endPt}
+Address = 10.249.177.1
 
 {cliStr}
 """
