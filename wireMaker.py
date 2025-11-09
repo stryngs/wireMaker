@@ -3,7 +3,7 @@
 import argparse
 import os
 
-def peerGen(endIp, endPt, svrPub, cliOct):
+def peerGen(endIp, endPt, svrPub, cliOct, prefix):
     """Generate and return peer information"""
     os.system('umask 077 && wg genkey > cliPrvkey')
     os.system('cat cliPrvkey | wg pubkey > cliPubkey')
@@ -14,7 +14,7 @@ def peerGen(endIp, endPt, svrPub, cliOct):
         cliPub = iFile.read().splitlines()[0]
     with open('psk') as iFile:
         psk = iFile.read().splitlines()[0]
-    cliIp = f'Address = 10.249.177.{cliOct}/24'
+    cliIp = f'Address = {prefix}.{cliOct}/24'
     cliQck = f"""[Interface]
 PrivateKey = {cliPriv}
 {cliIp}
@@ -22,13 +22,13 @@ PrivateKey = {cliPriv}
 [Peer]
 PublicKey = {svrPub}
 Endpoint = {endIp}:{endPt}
-AllowedIPs = 10.249.177.0/24
+AllowedIPs = {prefix}.0/24
 PresharedKey = {psk}
 """
     return cliQck, cliPub, psk, cliOct
 
 
-def main(endIp, endPt, multiClient = False):
+def main(endIp, endPt, multiClient = False, prefix = '10.249.177'):
     os.system('umask 077 && wg genkey > svrPrvkey')
     os.system('cat svrPrvkey | wg pubkey > svrPubkey')
     with open('svrPrvkey') as iFile:
@@ -38,15 +38,15 @@ def main(endIp, endPt, multiClient = False):
 
     ## Create environment for one client
     if multiClient is False:
-        cliQck = peerGen(endIp, endPt, svrPub, 2)
+        cliQck = peerGen(endIp, endPt, svrPub, 2, prefix)
         svrQck = f"""[Interface]
 PrivateKey = {svrPriv}
 ListenPort = {endPt}
-Address = 10.249.177.1
+Address = {prefix}.1
 
 [Peer]
 PublicKey = {cliQck[1]}
-AllowedIPs = 10.249.177.2/32
+AllowedIPs = {prefix}.2/32
 PresharedKey = {cliQck[2]}
 """
 
@@ -59,13 +59,13 @@ PresharedKey = {cliQck[2]}
     else:
         pList = []
         for i in range (2, multiClient + 1):
-            pList.append(peerGen(endIp, endPt, svrPub, i))
+            pList.append(peerGen(endIp, endPt, svrPub, i, prefix))
 
         fList = []
         for p in pList:
             cStr = f"""[Peer]
 PublicKey = {p[1]}
-AllowedIPs = 10.249.177.{p[3]}/32
+AllowedIPs = {prefix}.{p[3]}/32
 PresharedKey = {p[2]}
 """
             fList.append(cStr)
@@ -74,7 +74,7 @@ PresharedKey = {p[2]}
         svrQck = f"""[Interface]
 PrivateKey = {svrPriv}
 ListenPort = {endPt}
-Address = 10.249.177.1
+Address = {prefix}.1
 
 {cliStr}
 """
@@ -93,6 +93,7 @@ if __name__ == '__main__':
     psr.add_argument('-m', help = 'Multi client mode')
     psr.add_argument('-s', help = 'WireGuard server endpoint IP address', required = True)
     psr.add_argument('-p', help = '51820 is the default port')
+    psr.add_argument('--prefix', help = 'Specifies first three octets [Default is 10.249.177]')
     args = psr.parse_args()
 
     ## Parsing
@@ -101,11 +102,16 @@ if __name__ == '__main__':
         endPt = 51820
     else:
         endPt = args.p
-    if args.m is not None:
-        args.m = int(args.m)
-        x = main(endIp, endPt, args.m)
+    
+    if args.prefix is None:
+        prefix = '10.249.177'
     else:
-        main(endIp, endPt)
+        prefix = args.prefix
+
+    if args.m is not None:
+        x = main(endIp, endPt, int(args.m), prefix)
+    else:
+        main(endIp, endPt, prefix = prefix)
 
     ## Cleanup    
     os.remove('cliPrvkey')
