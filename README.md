@@ -10,6 +10,9 @@ The default IP range built into this is for a 10.249.177.1 as the server and a 1
 # Multiple client setup
 Uses the same layout on the server side as the single client setup with the addition of being able to generate configurations for multiple clients.  This is achieved by using `-m` and providing a number from 3 to 254.  As an example if you did `-m 10` then you would create 9 different client files.  The ip address granted to cliWire-4.conf would be a `10.249.177.4`.
 
+# Adding clients after the fact
+Usage of `--all` allows the adding of a new client configuration based on the last client configuration created.
+
 # Prefix setup
 Usage of `--prefix` allows for the choosing of the first 3 octets of the IP address schema allowing for a greater variety of use cases.
 
