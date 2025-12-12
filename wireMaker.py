@@ -72,7 +72,6 @@ def cliParse(path):
 
 def keepAlive(side, keepalive):
     if keepalive in (side, 'both'):
-        print(side)
         return 'PersistentKeepalive = 25\n'
     return ''
 
