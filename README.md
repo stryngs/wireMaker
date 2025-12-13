@@ -38,3 +38,12 @@ systemctl enable wg-quick@wg0
 systemctl daemon-reload
 systemctl start wg-quick@wg0
 ```
+
+## Allow peers to communicate
+By default the wireMaker configuration does not allow for peer to peer connectivity.  To allow the communication perform the following on the server:
+```
+sysctl -w net.ipv4.ip_forward=1
+
+iptables -A FORWARD -i svrWire -o svrWire -j ACCEPT
+iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+```
