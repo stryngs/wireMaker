@@ -6,11 +6,10 @@ import os
 def addClient(template, svrConf='svrWire.conf', keepalive = None):
     srv = svrParse(svrConf)
     cli = cliParse(template)
-
     nxt = nextIp(svrConf)
     prefix = srv['prefix']
 
-    # Generate keys
+    ## Generate keys
     os.system('umask 077 && wg genkey > t_cprv')
     os.system('cat t_cprv | wg pubkey > t_cpub')
     with open('t_cprv') as f:
@@ -25,7 +24,7 @@ def addClient(template, svrConf='svrWire.conf', keepalive = None):
         psk = f.read().strip()
     os.remove('t_psk')
 
-    # Write new client config
+    ## Write new client config
     newCliFile = f'cliWire-{nxt}.conf'
     cliText = f"""[Interface]
 PrivateKey = {cliPriv}
@@ -41,10 +40,8 @@ PresharedKey = {psk}
     with open(newCliFile, 'w') as f:
         f.write(cliText)
 
-    # Append to server config
-    peerBlock = f"""
-
-[Peer]
+    ## Append to server config
+    peerBlock = f"""[Peer]
 PublicKey = {cliPub}
 AllowedIPs = {prefix}.{nxt}/32
 PresharedKey = {psk}
@@ -52,7 +49,6 @@ PresharedKey = {psk}
 """
     with open(svrConf, 'a') as f:
         f.write(peerBlock)
-
     print(f'Added new client: {newCliFile}   (IP {prefix}.{nxt})')
 
 
@@ -61,11 +57,11 @@ def cliParse(path):
     with open(path) as f:
         for line in f:
             if line.startswith('PublicKey'):
-                data['svr_pub'] = line.split('=')[1].strip()
+                data['svr_pub'] = line.split('=', 1)[1].strip()
             elif line.startswith('Endpoint'):
-                data['endpoint'] = line.split('=')[1].strip()
+                data['endpoint'] = line.split('=', 1)[1].strip()
             elif line.startswith('AllowedIPs'):
-                p = line.split('=')[1].strip()
+                p = line.split('=', 1)[1].strip()
                 data['prefix'] = '.'.join(p.split('.')[:3])
     return data
 
@@ -84,12 +80,9 @@ def nextIp(svrConf='svrWire.conf'):
                 ip = line.split('=')[1].strip()
                 octet = int(ip.split('.')[3].split('/')[0])
                 used.append(octet)
-
     nextOct = max(used) + 1 if used else 2
-
     if nextOct > 254:
         raise Exception('Subnet full: cannot allocate beyond .254')
-
     return nextOct
 
 
@@ -129,14 +122,11 @@ def templateFind():
                 numbered.append((num, f))
             except:
                 continue
-
     if numbered:
         numbered.sort()
         return numbered[-1][1]
-
     if os.path.exists('cliWire.conf'):
         return 'cliWire.conf'
-
     raise Exception('No client config files found.')
 
 
@@ -160,22 +150,18 @@ def secureConfigs():
                 print(f'Warning: could not chmod 0600 on {f}: {e}')
 
 
-def svrParse(path='svrWire.conf'):
+def svrParse(path = 'svrWire.conf'):
     data = {}
     with open(path) as f:
         for line in f:
             if line.startswith('PrivateKey'):
-                data['svr_priv'] = line.split('=')[1].strip()
+                data['svr_priv'] = line.split('=', 1)[1].strip()
             elif line.startswith('ListenPort'):
-                data['port'] = line.split('=')[1].strip()
+                data['port'] = line.split('=', 1)[1].strip()
             elif line.startswith('Address'):
-                addr = line.split('=')[1].strip()
+                addr = line.split('=', 1)[1].strip()
                 data['prefix'] = '.'.join(addr.split('.')[:3])
     return data
-
-
-
-
 
 
 def main(endIp, endPt, multiClient = False, prefix = '10.249.177', keepalive = None):
