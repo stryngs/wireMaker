@@ -195,7 +195,7 @@ PresharedKey = {cliQck[2]}
     ## Create environment for multiple clients
     else:
         pList = []
-        for i in range (2, multiClient + 1):
+        for i in range(2, multiClient + 2):
             pList.append(peerGen(endIp, endPt, svrPub, i, prefix, keepalive))
 
         fList = []
